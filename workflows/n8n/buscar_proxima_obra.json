@@ -1,0 +1,187 @@
+{
+  "name": "Buscar Próxima Obra",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "buscar-proxima-obra",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "table": "obras",
+        "schema": "public",
+        "limit": 1,
+        "where": {
+          "conditions": [ 
+            {
+              "column": "avaliado",
+              "condition": "equal",
+              "value": "false"
+            }
+          ]
+        }
+      },
+      "name": "Buscar Obra",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{Object.keys($json[\"Buscar Obra\"]).length}}",
+              "value2": "0"
+            }
+          ]
+        }
+      },
+      "name": "Verificar Dados",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "text": "Nenhuma obra pendente de avaliação encontrada."
+      },
+      "name": "Mensagem Sem Dados",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        850,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "obra",
+              "value": "={{$json[0]}}"
+            }
+          ]
+        }
+      },
+      "name": "Formatar Resposta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        850,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Retornar Resposta",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Buscar Obra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Obra": {
+      "main": [
+        [
+          {
+            "node": "Verificar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verificar Dados": {
+      "main": [
+        [
+          {
+            "node": "Mensagem Sem Dados",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Formatar Resposta",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Mensagem Sem Dados": {
+      "main": [
+        [
+          {
+            "node": "Retornar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Resposta": {
+      "main": [
+        [
+          {
+            "node": "Retornar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "pinData": {},
+  "versionId": "1",
+  "webhookId": "buscar-proxima-obra",
+  "active": true,
+  "staticData": {},
+  "triggerCount": 0
+} 

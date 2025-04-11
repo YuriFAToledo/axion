@@ -1,0 +1,261 @@
+{
+  "name": "Exportar CSV",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "exportar-csv",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "table": "obras",
+        "schema": "public",
+        "returnAll": true
+      },
+      "name": "Buscar Obras",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        450,
+        200
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "table": "avaliacoes",
+        "schema": "public",
+        "returnAll": true
+      },
+      "name": "Buscar Avaliações",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        450,
+        400
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Separar e formatar dados em duas coleções\nconst obras = $items('Buscar Obras').map(item => item.json);\nconst avaliacoes = $items('Buscar Avaliações').map(item => item.json);\n\n// Formatar dados de obras\nconst dadosObras = obras.map(obra => ({\n  Codigo: obra.Codigo,\n  Nome: obra.Nome,\n  SPE: obra.SPE,\n  Tipo_De_Obra: obra.Tipo_De_Obra,\n  Subsetor: obra.Subsetor,\n  Categoria_De_Uso: obra.Categoria_De_Uso,\n  Status: obra.Status,\n  Fase: obra.Fase,\n  Etapa: obra.Etapa,\n  Padrao_De_Acabamento: obra.Padrao_De_Acabamento,\n  Especificacao: obra.Especificacao,\n  Tipo_De_Investimento: obra.Tipo_De_Investimento,\n  Valor_Do_Investimento: obra.Valor_Do_Investimento,\n  Grandeza_Do_Investimento: obra.Grandeza_Do_Investimento,\n  Area: obra.Area,\n  Numero_Torres: obra.Numero_Torres,\n  Numero_Pisos: obra.Numero_Pisos,\n  Numero_Salas: obra.Numero_Salas,\n  Numero_Apartamentos: obra.Numero_Apartamentos,\n  Numero_Casas: obra.Numero_Casas,\n  Numero_Lojas: obra.Numero_Lojas,\n  Numero_Unidades: obra.Numero_Unidades,\n  CEP: obra.CEP,\n  Endereco: obra.Endereco,\n  Numero_Endereco: obra.Numero_Endereco,\n  Complemento_Endereco: obra.Complemento_Endereco,\n  Bairro: obra.Bairro,\n  Regiao: obra.Regiao,\n  Estado: obra.Estado,\n  Cidade: obra.Cidade,\n  Telefone_Canteiro: obra.Telefone_Canteiro,\n  Data_Cadastro: obra.Data_Cadastro,\n  Data_Atualizacao: obra.Data_Atualizacao,\n  Data_Habilitacao: obra.Data_Habilitacao,\n  Previsao_Termino_Fase_Etapa: obra.Previsao_Termino_Fase_Etapa,\n  Status_Atualizacao: obra.Status_Atualizacao,\n  Status_Cadastro: obra.Status_Cadastro,\n  Previsao_Entrega: obra.Previsao_Entrega,\n  Empresas: obra.Empresas,\n  avaliado: obra.avaliado,\n  created_at: obra.created_at,\n  updated_at: obra.updated_at\n}));\n\n// Formatar dados de avaliações\nconst dadosAvaliacoes = avaliacoes.map(avaliacao => ({\n  Codigo: avaliacao.Codigo,\n  Nota: avaliacao.nota,\n  Justificativa: avaliacao.justificativa\n}));\n\n// Retornar dois conjuntos de dados\nreturn [\n  {\n    fileName: 'obras.csv',\n    data: dadosObras\n  },\n  {\n    fileName: 'avaliacoes.csv',\n    data: dadosAvaliacoes\n  }\n].map(sheet => ({ json: sheet }));",
+        "output": "json"
+      },
+      "name": "Combinar Dados",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $json.fileName }}",
+        "options": {
+          "addBOM": true,
+          "encoding": "utf8"
+        }
+      },
+      "name": "Gerar CSV",
+      "type": "n8n-nodes-base.csv",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Retornar Resposta",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "=Ocorreu um erro ao gerar o CSV: {{ $error.message }}",
+        "continueOnFail": true
+      },
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        450,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.errorMessage }}"
+            }
+          ]
+        }
+      },
+      "name": "Formatar Erro",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        650,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Buscar Obras",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Buscar Avaliações",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Obras": {
+      "main": [
+        [
+          {
+            "node": "Combinar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Avaliações": {
+      "main": [
+        [
+          {
+            "node": "Combinar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combinar Dados": {
+      "main": [
+        [
+          {
+            "node": "Gerar CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gerar CSV": {
+      "main": [
+        [
+          {
+            "node": "Retornar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "error": [
+        [
+          {
+            "node": "Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler": {
+      "main": [
+        [
+          {
+            "node": "Formatar Erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Erro": {
+      "main": [
+        [
+          {
+            "node": "Retornar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "pinData": {},
+  "versionId": "1",
+  "webhookId": "exportar-csv",
+  "active": true,
+  "staticData": {},
+  "triggerCount": 0
+} 
