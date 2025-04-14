@@ -1,3 +1,6 @@
+-- Drop da tabela existente
+DROP TABLE IF EXISTS public.obras;
+
 -- Tabela para armazenar os dados das obras importadas
 CREATE TABLE public.obras (
     -- Campos do JSON Obras Online
@@ -39,7 +42,41 @@ CREATE TABLE public.obras (
     "Status_Atualizacao" TEXT,
     "Status_Cadastro" TEXT,
     "Previsao_Entrega" TEXT,
-    "Empresas" JSONB, -- Armazena o array de empresas como JSONB
+
+    -- Campos da Empresa
+    "Empresa_CEP" TEXT,
+    "Empresa_CNPJ" TEXT,
+    "Empresa_Tipos" TEXT,
+    "Empresa_Bairro" TEXT,
+    "Empresa_Cidade" TEXT,
+    "Empresa_Codigo" TEXT,
+    "Empresa_Estado" TEXT,
+    "Empresa_Website" TEXT,
+    "Empresa_Endereco" TEXT,
+    "Empresa_Telefone" TEXT,
+    "Empresa_Empreendedor" TEXT,
+    "Empresa_Razao_Social" TEXT,
+    "Empresa_Nome_Fantasia" TEXT,
+    "Empresa_Numero_Endereco" TEXT,
+    "Empresa_Data_Atualizacao" TEXT,
+    "Empresa_Complemento_Endereco" TEXT,
+    "Empresa_Reponsavel_Pela_Execucao" TEXT,
+
+    -- Campos do Contato
+    "Contato_CEP" TEXT,
+    "Contato_Nome" TEXT,
+    "Contato_Email" TEXT,
+    "Contato_Bairro" TEXT,
+    "Contato_Cargos" TEXT,
+    "Contato_Cidade" TEXT,
+    "Contato_Codigo" TEXT,
+    "Contato_Estado" TEXT,
+    "Contato_Celular" TEXT,
+    "Contato_Endereco" TEXT,
+    "Contato_Telefone" TEXT,
+    "Contato_Numero_Endereco" TEXT,
+    "Contato_Data_Atualizacao" TEXT,
+    "Contato_Complemento_Endereco" TEXT,
 
     -- Campos adicionais para controle
     "avaliado" BOOLEAN DEFAULT FALSE NOT NULL,
@@ -49,7 +86,6 @@ CREATE TABLE public.obras (
 
 -- Comentários sobre colunas específicas
 COMMENT ON COLUMN public.obras."Codigo" IS 'Código único da obra (chave primária).';
-COMMENT ON COLUMN public.obras."Empresas" IS 'Array JSON contendo detalhes das empresas associadas.';
 COMMENT ON COLUMN public.obras."avaliado" IS 'Indica se a obra já foi avaliada (TRUE) ou não (FALSE).';
 
 -- Trigger para atualizar automaticamente a coluna updated_at
