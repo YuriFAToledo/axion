@@ -1,6 +1,30 @@
 "use client";
 
 import React from 'react';
+// import { ChevronDown } from 'lucide-react';
+
+// const InfoGroup = ({ title, children }) => {
+//   const [isOpen, setIsOpen] = React.useState(true);
+
+//   return (
+//     <div className="border rounded-lg overflow-hidden">
+//       <button
+//         onClick={() => setIsOpen(!isOpen)}
+//         className="w-full px-4 py-3 bg-gray-100 flex items-center justify-between text-left"
+//       >
+//         <span className="font-medium text-gray-900">{title}</span>
+//         <ChevronDown
+//           className={`w-5 h-5 text-gray-700 transition-transform ${
+//             isOpen ? 'transform rotate-180' : ''
+//           }`}
+//         />
+//       </button>
+//       {isOpen && (
+//         <div className="p-4 grid grid-cols-2 gap-4 bg-white">{children}</div>
+//       )}
+//     </div>
+//   );
+// };
 
 const InfoItem = ({ label, value }) => (
   <div className="flex justify-between py-2">
@@ -68,7 +92,7 @@ const ObraDetalhes = ({ obra, className }) => {
       <InfoItem label="Data de Cadastro" value={obra.Data_Cadastro} />
       <InfoItem label="Data de Atualização" value={obra.Data_Atualizacao} />
       <InfoItem label="Data de Habilitação" value={obra.Data_Habilitacao} />
-      <InfoItem label="Previsão de Término" value={obra.Previsao_Termino_Fase_Etapa} />
+      <InfoItem label="Previsão de Término Fase/Etapa" value={obra.Previsao_Termino_Fase_Etapa} />
       <InfoItem label="Previsão de Entrega" value={formatPrevisaoEntrega(obra.Previsao_Entrega)} />
       <InfoItem label="Status de Atualização" value={obra.Status_Atualizacao} />
       <InfoItem label="Status de Cadastro" value={obra.Status_Cadastro} />
@@ -105,5 +129,7 @@ const ObraDetalhes = ({ obra, className }) => {
     </div>
   );
 };
+
+
 
 export default ObraDetalhes; 
