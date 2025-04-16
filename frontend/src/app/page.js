@@ -4,41 +4,59 @@ import React, { useEffect, useState } from 'react';
 import ObraDetalhes from '../components/ObraDetalhes';
 import AvaliacaoForm from '../components/AvaliacaoForm';
 
+console.log('=== TESTE DE LOG ===');
+
 async function fetchNextWork() {
-  const response = await fetch('https://clonex-labs.app.n8n.cloud/webhook/buscar-proxima-obra');
-  
-  if (!response.ok) {
-    throw new Error('Erro na req dos crias');
-  }
+  try {
+    console.log('Iniciando busca da próxima obra...');
+    const response = await fetch('https://clonex-labs.app.n8n.cloud/webhook/buscar-proxima-obra');
+    
+    if (!response.ok) {
+      throw new Error('Erro na req dos crias');
+    }
 
-  const text = await response.text();
-  if (!text) {
-    throw new Error('Resposta vazia');
-  }
+    const text = await response.text();
+    console.log('Resposta do n8n:', text);
+    
+    if (!text) {
+      throw new Error('Resposta vazia');
+    }
 
-  return JSON.parse(text);
+    const data = JSON.parse(text);
+    console.log('Dados parseados:', data);
+    return data[0];
+  } catch (error) {
+    console.error('Erro ao buscar obra:', error);
+    throw error;
+  }
 }
 
 export default function Home() {
+  console.log('Renderizando componente Home');
   const [obra, setObra] = useState(null);
   const [obrasRestantes, setObrasRestantes] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('useEffect executando...');
     async function loadWork() {
       try {
         const data = await fetchNextWork();
-        if (!data || data.length === 0) {
+        console.log('Dados recebidos em loadWork:', data);
+        
+        if (!data) {
+          console.log('Nenhum dado recebido');
           setObra(null);
           setObrasRestantes(0);
         } else {
-          const { count, obra } = data;
-          setObra(obra);
-          setObrasRestantes(count);
+          console.log('Dados da obra:', data.obra);
+          console.log('Count:', data.count);
+          setObra(data.obra);
+          setObrasRestantes(data.count);
         }
       } catch (error) {
-        console.error(error);
+        console.error('Erro ao carregar obra:', error);
         setObra(null);
       } finally {
         setLoading(false);
@@ -49,13 +67,21 @@ export default function Home() {
 
   const handlePopupClose = () => {
     setShowPopup(false);
-    window.location.reload(); // Recarregar a página
+    window.location.reload();
   };
 
-  if (!obra && obrasRestantes === 0 && !loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <p className="text-xl font-bold text-gray-900">Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!obra && obrasRestantes === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-xl font-bold text-gray-900">Não há mais obras para avaliar</p>
       </div>
     );
   }
@@ -82,14 +108,4 @@ export default function Home() {
       </main>
     </div>
   );
-}
-
-const Popup = ({ onClose }) => (
-  <div className="fixed inset-0 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-lg shadow-lg border border-gray-300 max-w-sm w-full">
-      <h2 className="text-xl font-bold mb-4 text-center text-black">Avaliação Concluída!</h2>
-      <p className="text-gray-700 text-center mb-4">Obrigado por sua avaliação. A próxima obra será carregada em breve.</p>
-      <button onClick={onClose} className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-colors">OK</button>
-    </div>
-  </div>
-); 
+} 
