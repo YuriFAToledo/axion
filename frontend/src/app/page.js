@@ -24,7 +24,7 @@ async function fetchNextWork() {
 
     const data = JSON.parse(text);
     console.log('Dados parseados:', data);
-    return data[0];
+    return data;
   } catch (error) {
     console.error('Erro ao buscar obra:', error);
     throw error;
