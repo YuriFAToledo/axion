@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import ObraDetalhes from '../components/ObraDetalhes';
 import AvaliacaoForm from '../components/AvaliacaoForm';
 
@@ -45,10 +46,10 @@ export default function Home() {
         const data = await fetchNextWork();
         console.log('Dados recebidos em loadWork:', data);
         
-        if (!data) {
-          console.log('Nenhum dado recebido');
+        if (!data || !data.obra) {
+          console.log('Nenhum dado de obra recebido');
           setObra(null);
-          setObrasRestantes(0);
+          setObrasRestantes(data && data.count !== undefined ? data.count : 0);
         } else {
           console.log('Dados da obra:', data.obra);
           console.log('Count:', data.count);
@@ -58,6 +59,7 @@ export default function Home() {
       } catch (error) {
         console.error('Erro ao carregar obra:', error);
         setObra(null);
+        setObrasRestantes(0);
       } finally {
         setLoading(false);
       }
@@ -86,17 +88,17 @@ export default function Home() {
     );
   }
 
-  if (!obra) return <div className="min-h-screen bg-white"></div>;
+  if (!obra) return <div className="min-h-screen bg-white"><p className="text-center pt-10 text-gray-700">Não foi possível carregar a obra atual, mas ainda há {obrasRestantes} obras.</p></div>;
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="w-full px-8 py-4 bg-white border-b sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <div className="w-32 h-12 flex items-center justify-center">
-            <img src="/clonex.jpeg" alt="Clonex Logo" className="h-12 object-contain" />
+          <div className="w-auto h-12 flex items-center justify-center">
+            <Image src="/clonex.jpeg" alt="Clonex Logo" width={128} height={48} className="object-contain" />
           </div>
-          <div className="w-32 h-12 flex items-center justify-center">
-            <img src="/axion.jpeg" alt="Axion Logo" className="h-12 object-contain" />
+          <div className="w-auto h-12 flex items-center justify-center">
+            <Image src="/axion.jpeg" alt="Axion Logo" width={128} height={48} className="object-contain" />
           </div>
         </div>
       </header>

@@ -14,7 +14,8 @@ const formatDate = (dateString) => {
       month: '2-digit',
       year: 'numeric',
     });
-  } catch (e) {
+  } catch (error) {
+    console.error("Erro ao formatar data:", error);
     return dateString; // Retorna o original se não puder formatar
   }
 };
@@ -84,7 +85,7 @@ const Section = ({ title, children }) => (
 const KeyNeedsList = ({ needs, title }) => {
   if (!needs || typeof needs !== 'object') return <InfoRow label={title} value="Não informado" />;
   const activeNeeds = Object.entries(needs)
-    .filter(([_, value]) => value === 1)
+    .filter(([_key, value]) => value === 1)
     .map(([key]) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())); // Formata CamelCase para Título
 
   if (activeNeeds.length === 0) return <InfoRow label={title} value="Nenhuma necessidade específica informada." />;
