@@ -84,19 +84,21 @@ const Section = ({ title, children }) => (
 
 const KeyNeedsList = ({ needs, title }) => {
   if (!needs || typeof needs !== 'object') return <InfoRow label={title} value="Não informado" />;
-  const activeNeeds = Object.entries(needs)
-    .filter(([_key, value]) => value === 1)
-    .map(([key]) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())); // Formata CamelCase para Título
+  
+  // Filtra as entradas onde o valor é 1, e depois mapeia para pegar a chave e formatá-la.
+  const activeNeedNames = Object.entries(needs)
+    .filter(([, value]) => value === 1) // Filtra por valor. O primeiro elemento (chave) é ignorado aqui.
+    .map(([key]) => key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())); // Pega a chave do par filtrado e a formata.
 
-  if (activeNeeds.length === 0) return <InfoRow label={title} value="Nenhuma necessidade específica informada." />;
+  if (activeNeedNames.length === 0) return <InfoRow label={title} value="Nenhuma necessidade específica informada." />;
 
   return (
     <InfoRow
       label={title}
       value={
         <ul className="list-disc list-inside">
-          {activeNeeds.map((need) => (
-            <li key={need}>{need}</li>
+          {activeNeedNames.map((needName) => (
+            <li key={needName}>{needName}</li>
           ))}
         </ul>
       }

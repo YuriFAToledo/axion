@@ -5,72 +5,65 @@ import Image from 'next/image';
 import ObraDetalhes from '../components/ObraDetalhes';
 import AvaliacaoForm from '../components/AvaliacaoForm';
 
-console.log('=== TESTE DE LOG ===');
-
 async function fetchNextWork() {
   try {
-    console.log('Iniciando busca da próxima obra...');
     const response = await fetch('https://clonex-labs.app.n8n.cloud/webhook/buscar-proxima-obra');
-    
     if (!response.ok) {
-      throw new Error('Erro na req dos crias');
+      throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
     }
-
     const text = await response.text();
-    console.log('Resposta do n8n:', text);
-    
     if (!text) {
-      throw new Error('Resposta vazia');
+      console.warn("Resposta da API vazia");
+      return null;
     }
-
     const data = JSON.parse(text);
-    console.log('Dados parseados:', data);
     return data;
   } catch (error) {
-    console.error('Erro ao buscar obra:', error);
+    console.error('Erro ao buscar próxima obra:', error);
     throw error;
   }
 }
 
 export default function Home() {
-  console.log('Renderizando componente Home');
   const [obra, setObra] = useState(null);
   const [obrasRestantes, setObrasRestantes] = useState(0);
-  const [showPopup, setShowPopup] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('useEffect executando...');
+    let isActive = true;
+
     async function loadWork() {
+      setLoading(true);
       try {
         const data = await fetchNextWork();
-        console.log('Dados recebidos em loadWork:', data);
-        
-        if (!data || !data.obra) {
-          console.log('Nenhum dado de obra recebido');
-          setObra(null);
-          setObrasRestantes(data && data.count !== undefined ? data.count : 0);
-        } else {
-          console.log('Dados da obra:', data.obra);
-          console.log('Count:', data.count);
-          setObra(data.obra);
-          setObrasRestantes(data.count);
+        if (isActive) {
+          if (!data || data.obra === undefined || data.count === undefined) {
+            console.warn('Dados da obra incompletos ou não recebidos da API', data);
+            setObra(null);
+            setObrasRestantes(data && data.count !== undefined ? data.count : 0);
+          } else {
+            setObra(data.obra);
+            setObrasRestantes(data.count);
+          }
         }
       } catch (error) {
-        console.error('Erro ao carregar obra:', error);
-        setObra(null);
-        setObrasRestantes(0);
+        console.error('Falha ao carregar obra no useEffect:', error);
+        if (isActive) {
+          setObra(null);
+          setObrasRestantes(0);
+        }
       } finally {
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     }
     loadWork();
-  }, []);
 
-  const handlePopupClose = () => {
-    setShowPopup(false);
-    window.location.reload();
-  };
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -83,30 +76,36 @@ export default function Home() {
   if (!obra && obrasRestantes === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <p className="text-xl font-bold text-gray-900">Não há mais obras para avaliar</p>
+        <p className="text-xl font-bold text-gray-900">Não há mais obras para avaliar.</p>
       </div>
     );
   }
 
-  if (!obra) return <div className="min-h-screen bg-white"><p className="text-center pt-10 text-gray-700">Não foi possível carregar a obra atual, mas ainda há {obrasRestantes} obras.</p></div>;
+  if (!obra) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
+        <p className="text-xl font-bold text-gray-700 mb-2">Não foi possível carregar a obra atual.</p>
+        {obrasRestantes > 0 && <p className="text-md text-gray-600">Ainda há {obrasRestantes} obras para avaliar.</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="w-full px-8 py-4 bg-white border-b sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="w-auto h-12 flex items-center justify-center">
-            <Image src="/clonex.jpeg" alt="Clonex Logo" width={128} height={48} className="object-contain" />
+            <Image src="/clonex.jpeg" alt="Clonex Logo" width={128} height={48} className="object-contain" priority />
           </div>
           <div className="w-auto h-12 flex items-center justify-center">
-            <Image src="/axion.jpeg" alt="Axion Logo" width={128} height={48} className="object-contain" />
+            <Image src="/axion.jpeg" alt="Axion Logo" width={128} height={48} className="object-contain" priority />
           </div>
         </div>
       </header>
       <main className="container mx-auto p-4">
-        {showPopup && <Popup onClose={handlePopupClose} />}
         <div className="text-lg font-semibold text-gray-800 mb-4">Obras restantes: {obrasRestantes}</div>
         <ObraDetalhes obra={obra} className="bg-white p-6 rounded-lg shadow-md" />
-        <AvaliacaoForm obra={obra} setShowPopup={setShowPopup} setObrasRestantes={setObrasRestantes} />
+        <AvaliacaoForm obra={obra} setObrasRestantes={setObrasRestantes} />
       </main>
     </div>
   );
