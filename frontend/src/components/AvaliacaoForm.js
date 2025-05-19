@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { CheckCircle } from 'lucide-react';
 
-async function saveEvaluation(obraCodigo, nota, justificativa) {
+async function saveEvaluation(obraCodigo, nota, pontosPositivos, pontosNegativos) {
   const response = await fetch('https://clonex-labs.app.n8n.cloud/webhook/salvar-avaliacao', {
     method: 'POST',
     headers: {
@@ -13,7 +13,8 @@ async function saveEvaluation(obraCodigo, nota, justificativa) {
       {
         obra_codigo: obraCodigo,
         nota: nota,
-        justificativa: justificativa,
+        pontos_positivos: pontosPositivos,
+        pontos_negativos: pontosNegativos,
       },
     ]),
   });
@@ -22,14 +23,16 @@ async function saveEvaluation(obraCodigo, nota, justificativa) {
 
 const AvaliacaoForm = ({ obra, setShowPopup, setObrasRestantes }) => {
   const [rating, setRating] = useState(null);
-  const [justification, setJustification] = useState('');
+  const [pontosPositivos, setPontosPositivos] = useState('');
+  const [pontosNegativos, setPontosNegativos] = useState('');
 
   const handleSubmit = async () => {
-    if (rating !== null && justification.trim() !== '') {
-      await saveEvaluation(obra.Codigo, rating, justification);
-      console.log('Avaliação enviada:', rating, justification);
+    if (rating !== null && pontosPositivos.trim() !== '' && pontosNegativos.trim() !== '') {
+      await saveEvaluation(obra.Codigo, rating, pontosPositivos, pontosNegativos);
+      console.log('Avaliação enviada:', rating, pontosPositivos, pontosNegativos);
       setRating(null);
-      setJustification('');
+      setPontosPositivos('');
+      setPontosNegativos('');
       setObrasRestantes(prev => prev - 1);
       setShowPopup(true); // Mostrar popup de confirmação
     }
@@ -52,19 +55,28 @@ const AvaliacaoForm = ({ obra, setShowPopup, setObrasRestantes }) => {
         ))}
       </div>
       <div className="mt-6">
-        <p className="text-sm text-gray-700 mb-3">Justificativa</p>
+        <p className="text-sm text-gray-700 mb-3">Pontos Positivos</p>
         <textarea
-          value={justification}
-          onChange={(e) => setJustification(e.target.value)}
-          className="w-full h-32 p-3 bg-white border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-black text-gray-900"
-          placeholder="Explique sua avaliação..."
+          value={pontosPositivos}
+          onChange={(e) => setPontosPositivos(e.target.value)}
+          className="w-full h-24 p-3 bg-white border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-black text-gray-900"
+          placeholder="Descreva os pontos positivos..."
+        />
+      </div>
+      <div className="mt-4">
+        <p className="text-sm text-gray-700 mb-3">Pontos Negativos</p>
+        <textarea
+          value={pontosNegativos}
+          onChange={(e) => setPontosNegativos(e.target.value)}
+          className="w-full h-24 p-3 bg-white border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-black text-gray-900"
+          placeholder="Descreva os pontos negativos..."
         />
       </div>
       <button
         onClick={handleSubmit}
-        disabled={rating === null || justification.trim() === ''}
+        disabled={rating === null || pontosPositivos.trim() === '' || pontosNegativos.trim() === ''}
         className={`w-full py-3 rounded-lg mt-6 flex items-center justify-center gap-2 transition-colors duration-200 ${
-          rating !== null && justification.trim() !== ''
+          rating !== null && pontosPositivos.trim() !== '' && pontosNegativos.trim() !== ''
             ? 'bg-blue-500 text-white hover:bg-blue-600'
             : 'bg-gray-200 text-gray-400 cursor-not-allowed'
         }`}
