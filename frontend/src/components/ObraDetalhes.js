@@ -111,17 +111,17 @@ const ContactCard = ({ contact, firmType }) => {
   if (!contact) return null;
   return (
     <div className="mt-2 p-3 border border-gray-200 rounded-md bg-gray-50">
-      <p className="text-sm font-semibold">{contact.firstName} {contact.lastName} - {contact.titleDesc || 'N/A'}</p>
-      {firmType && <p className="text-xs text-gray-600">Tipo na Obra: {firmType}</p>}
-      {contact.emailAddress && <p className="text-xs">Email: <a href={`mailto:${contact.emailAddress}`} className="text-blue-600 hover:underline">{contact.emailAddress}</a></p>}
+      <p className="text-sm font-semibold text-black-900">{contact.firstName} {contact.lastName} - {contact.titleDesc || 'N/A'}</p>
+      {firmType && <p className="text-xs text-black-800">Tipo na Obra: {firmType}</p>}
+      {contact.emailAddress && <p className="text-xs text-gray-800">Email: <a href={`mailto:${contact.emailAddress}`} className="text-blue-600 hover:underline">{contact.emailAddress}</a></p>}
       {contact.phone && contact.phone.number && (
-        <p className="text-xs">Telefone: +{contact.phone.cc} {contact.phone.number} {contact.phone.ext ? `Ramal ${contact.phone.ext}` : ''}</p>
+        <p className="text-xs text-black-800">Telefone: +{contact.phone.cc} {contact.phone.number} {contact.phone.ext ? `Ramal ${contact.phone.ext}` : ''}</p>
       )}
       {contact.linkedInId && (
-        <p className="text-xs">LinkedIn: <a href={`https://www.linkedin.com/in/${contact.linkedInId}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Perfil</a></p>
+        <p className="text-xs text-black-800">LinkedIn: <a href={`https://www.linkedin.com/in/${contact.linkedInId}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Perfil</a></p>
       )}
        {contact.physicalAddress && (
-         <p className="text-xs mt-1">Endereço: {renderAddress(contact.physicalAddress)}</p>
+         <p className="text-xs mt-1 text-black-800">Endereço: {renderAddress(contact.physicalAddress)}</p>
        )}
     </div>
   );
