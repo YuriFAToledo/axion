@@ -5,6 +5,25 @@ import Image from 'next/image';
 import ObraDetalhes from '../components/ObraDetalhes';
 import AvaliacaoForm from '../components/AvaliacaoForm';
 
+// Popup Component
+const ConfirmationPopup = ({ message, onClose }) => {
+  if (!message) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+        <p className="text-lg font-semibold text-gray-800 mb-4">{message}</p>
+        <button
+          onClick={onClose}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+        >
+          OK
+        </button>
+      </div>
+    </div>
+  );
+};
+
 async function fetchNextWork() {
   try {
     const response = await fetch('https://clonex-labs.app.n8n.cloud/webhook/buscar-proxima-obra');
@@ -28,6 +47,7 @@ export default function Home() {
   const [obra, setObra] = useState(null);
   const [obrasRestantes, setObrasRestantes] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false); // Estado para o popup
 
   useEffect(() => {
     let isActive = true;
@@ -65,6 +85,11 @@ export default function Home() {
     };
   }, []);
 
+  const handlePopupClose = () => {
+    setShowConfirmationPopup(false);
+    window.location.reload(); // Recarrega a página
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -95,18 +120,22 @@ export default function Home() {
       <header className="w-full px-8 py-4 bg-white border-b sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="w-auto h-12 flex items-center justify-center">
-            <Image src="/clonex.jpeg" alt="Clonex Logo" width={128} height={48} className="object-contain" priority />
+            <Image src="/clonex.jpeg" alt="Clonex Logo" width={128} height={48} className="object-contain h-full" priority />
           </div>
           <div className="w-auto h-12 flex items-center justify-center">
-            <Image src="/axion.jpeg" alt="Axion Logo" width={128} height={48} className="object-contain" priority />
+            <Image src="/axion.jpeg" alt="Axion Logo" width={128} height={48} className="object-contain h-full" priority />
           </div>
         </div>
       </header>
       <main className="container mx-auto p-4">
         <div className="text-lg font-semibold text-gray-800 mb-4">Obras restantes: {obrasRestantes}</div>
         <ObraDetalhes obra={obra} className="bg-white p-6 rounded-lg shadow-md" />
-        <AvaliacaoForm obra={obra} setObrasRestantes={setObrasRestantes} />
+        <AvaliacaoForm obra={obra} setObrasRestantes={setObrasRestantes} setShowPopup={setShowConfirmationPopup} />
       </main>
+      <ConfirmationPopup
+        message={showConfirmationPopup ? "Avaliação processada com sucesso!" : null}
+        onClose={handlePopupClose}
+      />
     </div>
   );
 } 
