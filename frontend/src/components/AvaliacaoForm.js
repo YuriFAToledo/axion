@@ -22,13 +22,14 @@ async function saveEvaluation(obraCodigo, nota, pontosPositivos, pontosNegativos
 }
 
 const AvaliacaoForm = ({ obra, setShowPopup, setObrasRestantes }) => {
+  console.log(obra);
   const [rating, setRating] = useState(null);
   const [pontosPositivos, setPontosPositivos] = useState('');
   const [pontosNegativos, setPontosNegativos] = useState('');
 
   const handleSubmit = async () => {
     if (rating !== null && pontosPositivos.trim() !== '' && pontosNegativos.trim() !== '') {
-      await saveEvaluation(obra.Codigo, rating, pontosPositivos, pontosNegativos);
+      await saveEvaluation(obra.projectId, rating, pontosPositivos, pontosNegativos);
       console.log('Avaliação enviada:', rating, pontosPositivos, pontosNegativos);
       setRating(null);
       setPontosPositivos('');
