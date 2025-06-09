@@ -55,15 +55,17 @@ export default function Home() {
     async function loadWork() {
       setLoading(true);
       try {
-        const data = await fetchNextWork();
+        const result = await fetchNextWork(); // A API agora retorna o objeto diretamente
         if (isActive) {
-          if (!data || data.obra === undefined || data.count === undefined) {
-            console.warn('Dados da obra incompletos ou não recebidos da API', data);
+          // A verificação agora é feita diretamente no objeto 'result'
+          if (!result || result.obra === undefined || result.count === undefined) {
+            console.warn('Dados da obra incompletos ou não recebidos da API', result);
             setObra(null);
-            setObrasRestantes(data && data.count !== undefined ? data.count : 0);
+            // Se o resultado existir e tiver um 'count', usamos, senão, 0.
+            setObrasRestantes(result && result.count !== undefined ? result.count : 0);
           } else {
-            setObra(data.obra);
-            setObrasRestantes(data.count);
+            setObra(result.obra);
+            setObrasRestantes(result.count);
           }
         }
       } catch (error) {
