@@ -47,6 +47,36 @@
     },
     {
       "parameters": {
+        "operation": "select",
+        "table": "obras",
+        "schema": "public",
+        "select": "count(*)",
+        "where": {
+          "conditions": [ 
+            {
+              "column": "avaliado",
+              "condition": "equal",
+              "value": "false"
+            }
+          ]
+        }
+      },
+      "name": "Contar Obras Restantes",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        450,
+        500
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "1",
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
         "conditions": {
           "boolean": [
             {
@@ -66,7 +96,21 @@
     },
     {
       "parameters": {
-        "text": "Nenhuma obra pendente de avaliação encontrada."
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "Nenhuma obra pendente de avaliação encontrada."
+            }
+          ],
+          "number": [
+            {
+              "name": "count",
+              "value": 0
+            }
+          ]
+        }
       },
       "name": "Mensagem Sem Dados",
       "type": "n8n-nodes-base.set",
@@ -83,7 +127,13 @@
           "string": [
             {
               "name": "obra",
-              "value": "={{$json[0]}}"
+              "value": "={{$json[\"Buscar Obra\"][0]}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "count",
+              "value": "={{$json[\"Contar Obras Restantes\"][0].count}}"
             }
           ]
         }
@@ -118,11 +168,27 @@
             "node": "Buscar Obra",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Contar Obras Restantes",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     },
     "Buscar Obra": {
+      "main": [
+        [
+          {
+            "node": "Verificar Dados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contar Obras Restantes": {
       "main": [
         [
           {

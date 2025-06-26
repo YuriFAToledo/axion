@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, Loader2 } from 'lucide-react';
 
-async function saveEvaluation(obraCodigo, nota, pontosPositivos, pontosNegativos) {
+async function saveEvaluation(obraCodigo, nota, pontosPositivos, pontosNegativos, tipoFonte) {
   const response = await fetch('https://clonex-labs.app.n8n.cloud/webhook/salvar-avaliacao', {
     method: 'POST',
     headers: {
@@ -15,6 +15,26 @@ async function saveEvaluation(obraCodigo, nota, pontosPositivos, pontosNegativos
         nota: nota,
         pontos_positivos: pontosPositivos,
         pontos_negativos: pontosNegativos,
+        tipo_fonte: tipoFonte,
+      },
+    ]),
+  });
+  return response.json();
+}
+
+async function skipEvaluation(obraCodigo, tipoFonte) {
+  const response = await fetch('https://clonex-labs.app.n8n.cloud/webhook/salvar-avaliacao', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify([
+      {
+        obra_codigo: obraCodigo,
+        nota: "Skip",
+        pontos_positivos: "",
+        pontos_negativos: "",
+        tipo_fonte: tipoFonte,
       },
     ]),
   });
@@ -28,12 +48,20 @@ const AvaliacaoForm = ({ obra, setShowPopup, setObrasRestantes }) => {
   const [pontosNegativos, setPontosNegativos] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Determinar o tipo da obra e o código correspondente
+  const isIIR = obra.plataforma === 'iir' || obra.projectId || obra.projectName || obra.industryCodeDesc;
+  const isObrasOnline = obra.plataforma === 'obrasonline' || obra.codigo || obra.nome;
+  
+  // Definir o código da obra baseado no tipo
+  const obraCodigo = isIIR ? obra.projectId : obra.codigo;
+  const tipoFonte = isIIR ? 'iir' : 'obrasonline';
+
   const handleSubmit = async () => {
     if (rating !== null && pontosPositivos.trim() !== '' && pontosNegativos.trim() !== '' && !isSubmitting) {
       setIsSubmitting(true);
       try {
-        await saveEvaluation(obra.projectId, rating, pontosPositivos, pontosNegativos);
-        console.log('Avaliação enviada:', rating, pontosPositivos, pontosNegativos);
+        await saveEvaluation(obraCodigo, rating, pontosPositivos, pontosNegativos, tipoFonte);
+        console.log('Avaliação enviada:', rating, pontosPositivos, pontosNegativos, 'Tipo:', tipoFonte);
         setRating(null);
         setPontosPositivos('');
         setPontosNegativos('');
@@ -49,10 +77,38 @@ const AvaliacaoForm = ({ obra, setShowPopup, setObrasRestantes }) => {
     }
   };
 
+  const handleSkip = async () => {
+    if (!isSubmitting) {
+      setIsSubmitting(true);
+      try {
+        await skipEvaluation(obraCodigo, tipoFonte);
+        console.log('Obra pulada:', obraCodigo, 'Tipo:', tipoFonte);
+        setRating(null);
+        setPontosPositivos('');
+        setPontosNegativos('');
+        setObrasRestantes(prev => prev - 1);
+        setShowPopup(true); // Mostrar popup de confirmação
+      } catch (error) {
+        console.error("Erro ao pular obra:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
   const canSubmit = rating !== null && pontosPositivos.trim() !== '' && pontosNegativos.trim() !== '';
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
+      {/* Badge indicando o tipo da obra sendo avaliada */}
+      <div className="mb-4">
+        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+          isIIR ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+        }`}>
+          Avaliando: {isIIR ? 'IIR' : 'ObrasOnline'} | ID: {obraCodigo}
+        </span>
+      </div>
+      
       <p className="text-sm text-gray-700 mb-3">Avaliação</p>
       <div className="flex gap-2 flex-wrap">
         {[...Array(11)].map((_, i) => (
@@ -107,6 +163,24 @@ const AvaliacaoForm = ({ obra, setShowPopup, setObrasRestantes }) => {
             <CheckCircle size={20} />
             Enviar avaliação
           </>
+        )}
+      </button>
+      
+      {/* Botão Pular */}
+      <button
+        onClick={handleSkip}
+        disabled={isSubmitting}
+        className={`w-full py-3 rounded-lg mt-3 flex items-center justify-center gap-2 transition-colors duration-200 bg-transparent border border-gray-300 text-gray-800 hover:bg-gray-50 ${
+          isSubmitting ? 'cursor-not-allowed opacity-50' : ''
+        }`}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 size={20} className="animate-spin" />
+            Processando...
+          </>
+        ) : (
+          'Pular'
         )}
       </button>
     </div>

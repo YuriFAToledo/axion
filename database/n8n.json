@@ -1,0 +1,302 @@
+{
+    "name": "Traduzir Dados da Obra e Preparar para Supabase",
+    "nodes": [
+      {
+        "parameters": {},
+        "name": "Start",
+        "type": "n8n-nodes-base.start",
+        "typeVersion": 1,
+        "position": [
+          250,
+          300
+        ],
+        "id": "3f8a5dd4-2b0a-4b8c-a82c-04b7f8f8c0e1"
+      },
+      {
+        "parameters": {
+          "note": "Recebe o JSON da Obra Original como entrada para este workflow.\n\nPróximo Passo: Nó 'Traduções por Mapeamento e JSONB'"
+        },
+        "name": "Nota: Entrada da Obra",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          250,
+          100
+        ],
+        "id": "a1b2c3d4-e5f6-7788-99a0-b1c2d3e4f5a6"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Mapeamentos para tradução (Exemplos - Adicione todos os necessários)\nconst industryCodeMap = {\n  \"Food & Beverage\": \"Alimentos e Bebidas\",\n  \"Chemicals\": \"Químicos\",\n  \"Metals & Minerals\": \"Metais e Minerais\"\n};\nconst projectStatusMap = {\n  \"Active\": \"Ativo\",\n  \"Planned\": \"Planejado\",\n  \"On Hold\": \"Em Espera\"\n};\nconst projectTypeMap = {\n  \"Unit Addition\": \"Adição de Unidade\",\n  \"Plant Expansion\": \"Expansão de Planta\",\n  \"New Plant\": \"Nova Planta\"\n};\nconst plantStatusMap = {\n  \"Operational\": \"Operacional\",\n  \"Under Construction\": \"Em Construção\"\n};\nconst pecActivityMap = {\n  \"Project Scope\": \"Escopo do Projeto\",\n  \"Engineering\": \"Engenharia\"\n};\nconst probabilityMap = {\n  \"Medium (70-80%)\": \"Média (70-80%)\",\n  \"High (>80%)\": \"Alta (>80%)\",\n  \"Low (<60%)\": \"Baixa (<60%)\"\n};\nconst countryMap = {\n  \"Brazil\": \"Brasil\",\n  \"USA\": \"Estados Unidos\"\n};\nconst firmTypeMap = {\n  \"Project Manager\": \"Gerente de Projeto\",\n  \"Owner\": \"Proprietário\",\n  \"Contractor\": \"Contratado\"\n};\nconst contactTitleMap = {\n  \"Engineering Manager\": \"Gerente de Engenharia\",\n  \"Plant Manager\": \"Gerente de Planta\",\n  \"Project Manager\": \"Gerente de Projeto\"\n};\n\n// Função auxiliar para traduzir ou retornar original\nfunction translate(value, map) {\n  return map[value] || value;\n}\n\n// Assumindo que $json contém o JSON da obra vindo do nó anterior\nconst obra = $json;\n\n// 1. Traduções de Campos de Primeiro Nível (usando mapeamento)\nobra.industryCodeDesc_pt = translate(obra.industryCodeDesc, industryCodeMap);\nobra.projectStatusDesc_pt = translate(obra.projectStatusDesc, projectStatusMap);\nobra.projectTypeDesc_pt = translate(obra.projectTypeDesc, projectTypeMap);\nobra.plantStatusDesc_pt = translate(obra.plantStatusDesc, plantStatusMap);\nobra.pecActivityDesc_pt = translate(obra.pecActivityDesc, pecActivityMap);\nobra.projectProbability_pt = translate(obra.projectProbability, probabilityMap);\n\n// (tradingRegionName, marketRegionName, worldRegionName podem precisar de mapeamentos também)\nobra.tradingRegionName_pt = obra.tradingRegionName; // Placeholder\nobra.marketRegionName_pt = obra.marketRegionName;   // Placeholder\nobra.worldRegionName_pt = obra.worldRegionName;    // Placeholder\n\n// 2. Preparar campos para tradução via API (serão preenchidos após simulação de API)\n// Apenas um exemplo, você faria isso para todos os campos de texto livre relevantes\n// Os nós HTTP Request subsequentes simularão a tradução destes.\n\n// 3. Traduções dentro de JSONB\n// 3.1. plantPhysicalAddress (Objeto JSONB)\nif (obra.plantPhysicalAddress) {\n  obra.plantPhysicalAddress.countryName_pt = translate(obra.plantPhysicalAddress.countryName, countryMap);\n  // Adicionar countyName_pt, stateName_pt se necessário, após tradução por API ou mapeamento\n  // obra.plantPhysicalAddress.countyName_pt = await traduzirComAPI(obra.plantPhysicalAddress.countyName); (Conceitual)\n}\n\n// 3.2. projectSectors (Array de Objetos em JSONB)\nif (obra.projectSectors && Array.isArray(obra.projectSectors)) {\n  obra.projectSectors.forEach(sector => {\n    sector.projectSectorDesc_pt = translate(sector.projectSectorDesc, {}); // Adicione um mapa para projectSectorDesc se aplicável\n  });\n}\n\n// 3.3. plantSectors (Array de Objetos em JSONB)\nif (obra.plantSectors && Array.isArray(obra.plantSectors)) {\n  obra.plantSectors.forEach(sector => {\n    sector.plantSectorDesc_pt = translate(sector.plantSectorDesc, {}); // Adicione um mapa para plantSectorDesc se aplicável\n  });\n}\n\n// 3.4. projectCompanies (Array de Objetos em JSONB)\nif (obra.projectCompanies && Array.isArray(obra.projectCompanies)) {\n  obra.projectCompanies.forEach(company => {\n    company.firmTypeDesc_pt = translate(company.firmTypeDesc, firmTypeMap);\n    if (company.projectContact) {\n      company.projectContact.titleDesc_pt = translate(company.projectContact.titleDesc, contactTitleMap);\n    }\n  });\n}\n\n// Retorna a obra modificada para o próximo nó\nreturn obra;\n"
+        },
+        "name": "Traduções por Mapeamento e JSONB (Parte 1)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 1,
+        "position": [
+          500,
+          300
+        ],
+        "id": "b4c5d6e7-f8g9-1011-1213-h1i2j3k4l5m6"
+      },
+      {
+        "parameters": {
+          "note": "Este nó aplica traduções para campos com valores predefinidos (usando mapeamentos internos) e inicia a modificação dos campos JSONB.\n\nCampos de texto livre como 'projectName', 'scope', 'schedule', 'projectSicDesc' etc., serão \"traduzidos\" nos próximos nós (simulação de API).\n\nPróximo Passo: Simulação de Tradução de 'projectName'"
+        },
+        "name": "Nota: Lógica de Tradução Fixa",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          500,
+          100
+        ],
+        "id": "c5d6e7f8-g9h0-1112-1314-i2j3k4l5m6n7"
+      },
+      {
+        "parameters": {
+          "url": "https://jsonplaceholder.typicode.com/todos/1",
+          "options": {},
+          "bodyParameters": "={{ { 'text_to_translate': $json.projectName } }}",
+          "headerParameters": "={{ { 'Content-Type': 'application/json' } }}",
+          "method": "POST",
+          "authentication": "none",
+          "jsonParameters": true,
+          "jsonBody": true
+        },
+        "name": "Simular Tradução API: projectName",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          750,
+          150
+        ],
+        "id": "d6e7f8g9-h0i1-2233-4455-j3k4l5m6n7o8"
+      },
+      {
+        "parameters": {
+          "url": "https://jsonplaceholder.typicode.com/todos/2",
+          "options": {},
+          "bodyParameters": "={{ { 'text_to_translate': $json.scope } }}",
+          "headerParameters": "={{ { 'Content-Type': 'application/json' } }}",
+          "method": "POST",
+          "authentication": "none",
+          "jsonParameters": true,
+          "jsonBody": true
+        },
+        "name": "Simular Tradução API: scope",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          750,
+          300
+        ],
+        "id": "e7f8g9h0-i1j2-3344-5566-k4l5m6n7o8p9"
+      },
+      {
+        "parameters": {
+          "url": "https://jsonplaceholder.typicode.com/todos/3",
+          "options": {},
+          "bodyParameters": "={{ { 'text_to_translate': $json.schedule } }}",
+          "headerParameters": "={{ { 'Content-Type': 'application/json' } }}",
+          "method": "POST",
+          "authentication": "none",
+          "jsonParameters": true,
+          "jsonBody": true
+        },
+        "name": "Simular Tradução API: schedule",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.1,
+        "position": [
+          750,
+          450
+        ],
+        "id": "f8g9h0i1-j2k3-4455-6677-l5m6n7o8p9q0"
+      },
+      {
+        "parameters": {
+          "note": "Estes nós HTTP Request SIMULAM chamadas a uma API de tradução.\nNa prática, você os substituiria por chamadas reais à sua API de tradução escolhida (Google Translate, DeepL, etc.).\n\nEles estão configurados para enviar o texto original no corpo da requisição e, para este exemplo, a resposta da API (jsonplaceholder) será ignorada, e o nó 'Consolidar Traduções' pegará o texto original e o prefixará.\n\nPróximo Passo: Nó 'Consolidar Traduções e Finalizar JSONB'"
+        },
+        "name": "Nota: Simulação API Tradução",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          750,
+          0
+        ],
+        "id": "g9h0i1j2-k3l4-5566-7788-m6n7o8p9q0r1"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Obter o resultado do nó de mapeamento (que já tem algumas traduções _pt)\n// $items(\"Traduções por Mapeamento e JSONB (Parte 1)\")[0].json;\nconst obra = $items(0)[0].json; // assume que o nó 'Traduções por Mapeamento e JSONB (Parte 1)' é o primeiro input não-start\n\n// Simulação da obtenção de resultados da API de tradução\n// Na prática, você pegaria $items(\"Simular Tradução API: projectName\")[0].json.body ou similar\n// Para este exemplo, vamos pegar o valor original e prefixar.\n\n// Pegando os textos originais enviados para as \"APIs\"\nconst originalProjectName = $items(\"Simular Tradução API: projectName\")[0].json.json.text_to_translate;\nconst originalScope = $items(\"Simular Tradução API: scope\")[0].json.json.text_to_translate;\nconst originalSchedule = $items(\"Simular Tradução API: schedule\")[0].json.json.text_to_translate;\n// Adicione aqui outros campos que foram \"traduzidos\" por API\nconst originalProjectSicDesc = obra.projectSicDesc; // Supondo que este também iria para API\nconst originalSicProductDesc = obra.sicProductDesc; // Supondo que este também iria para API\n\n// Aplicar traduções \"simuladas\" da API\nobra.projectName_pt = \"[TRADUZIDO] \" + originalProjectName;\nobra.scope_pt = \"[TRADUZIDO] \" + originalScope;\nobra.schedule_pt = \"[TRADUZIDO] \" + originalSchedule;\nobra.projectSicDesc_pt = \"[TRADUZIDO] \" + originalProjectSicDesc;\nobra.sicProductDesc_pt = \"[TRADUZIDO] \" + originalSicProductDesc;\n\n// Exemplo de como você poderia lidar com a tradução de countyName dentro de plantPhysicalAddress\n// se ele também viesse de uma API simulada. \n// Suponha que houve um nó HTTP para countyName:\n// const originalCountyName = $items(\"Simular Tradução API: countyName\")[0].json.json.text_to_translate;\nif (obra.plantPhysicalAddress) {\n   // obra.plantPhysicalAddress.countyName_pt = \"[TRADUZIDO] \" + obra.plantPhysicalAddress.countyName;\n   // Você precisaria de um nó HTTP para cada campo de texto livre ou um loop.\n   // Por simplicidade, se countyName tiver um mapa, use-o. Se não, deixe como está ou use API.\n   // Se o countyName for sempre 'Minas Gerais' para o Brasil, o mapeamento inicial já o teria tratado.\n}\n\n// Adicionar quaisquer outras lógicas de finalização se necessário.\n\nreturn obra;\n"
+        },
+        "name": "Consolidar Traduções e Finalizar JSONB",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 1,
+        "position": [
+          1000,
+          300
+        ],
+        "id": "h0i1j2k3-l4m5-6677-8899-n7o8p9q0r1s2",
+        "inputs": {
+          "main": [
+            [
+              {
+                "node": "Traduções por Mapeamento e JSONB (Parte 1)",
+                "output": "main"
+              }
+            ]
+          ]
+        },
+        "additionalFields": {
+          "inputs": {
+            "input_0": {
+              "name": "main",
+              "connections": [
+                {
+                  "node": "Traduções por Mapeamento e JSONB (Parte 1)",
+                  "output": "main"
+                }
+              ]
+            },
+            "input_1":{ 
+               "name": "api_projectName",
+               "connections": [
+                  {
+                     "node": "Simular Tradução API: projectName",
+                     "output": "main"
+                  }
+               ]
+            },
+            "input_2":{ 
+               "name": "api_scope",
+               "connections": [
+                  {
+                     "node": "Simular Tradução API: scope",
+                     "output": "main"
+                  }
+               ]
+            },
+            "input_3":{
+               "name": "api_schedule",
+               "connections": [
+                  {
+                     "node": "Simular Tradução API: schedule",
+                     "output": "main"
+                  }
+               ]
+            }
+          }
+        }
+      },
+      {
+        "parameters": {
+          "note": "Este nó coleta os resultados das traduções (mapeadas e simuladas via API) e finaliza a estrutura do objeto da obra com todos os campos _pt.\n\nO objeto JSON resultante está pronto para ser enviado ao Supabase (ou qualquer outro destino).\n\nPróximo Passo: (Fim do Workflow ou Nó de Saída/Supabase)"
+        },
+        "name": "Nota: Objeto Final da Obra",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          1000,
+          100
+        ],
+        "id": "i1j2k3l4-m5n6-7788-9900-o8p9q0r1s2t3"
+      },
+      {
+        "parameters": {},
+        "name": "Fim (Dados Prontos)",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          1250,
+          300
+        ],
+        "id": "j2k3l4m5-n6o7-8899-0011-p9q0r1s2t3u4"
+      }
+    ],
+    "connections": {
+      "Start": {
+        "main": [
+          [
+            {
+              "node": "Traduções por Mapeamento e JSONB (Parte 1)",
+              "output": "main"
+            }
+          ]
+        ]
+      },
+      "Traduções por Mapeamento e JSONB (Parte 1)": {
+        "main": [
+          [
+            {
+              "node": "Simular Tradução API: projectName",
+              "output": "main"
+            }
+          ],
+          [
+            {
+              "node": "Simular Tradução API: scope",
+              "output": "main"
+            }
+          ],
+          [
+            {
+              "node": "Simular Tradução API: schedule",
+              "output": "main"
+            }
+          ],
+          [
+            {
+              "node": "Consolidar Traduções e Finalizar JSONB",
+              "output": "main"
+            }
+          ]
+        ]
+      },
+      "Simular Tradução API: projectName": {
+        "main": [
+          [
+            {
+              "node": "Consolidar Traduções e Finalizar JSONB",
+              "output": "main" 
+            }
+          ]
+        ]
+      },
+      "Simular Tradução API: scope": {
+        "main": [
+          [
+            {
+              "node": "Consolidar Traduções e Finalizar JSONB",
+              "output": "main"
+            }
+          ]
+        ]
+      },
+      "Simular Tradução API: schedule": {
+        "main": [
+          [
+            {
+              "node": "Consolidar Traduções e Finalizar JSONB",
+              "output": "main"
+            }
+          ]
+        ]
+      },
+      "Consolidar Traduções e Finalizar JSONB": {
+        "main": [
+          [
+            {
+              "node": "Fim (Dados Prontos)",
+              "output": "main"
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {},
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true,
+      "instanceId": "YOUR_N8N_INSTANCE_ID"
+    },
+    "pinData": {}
+  }

@@ -113,7 +113,6 @@ const KeyNeedsList = ({ needs, title }) => {
   );
 };
 
-
 const ContactCard = ({ contact, firmType, firmType_pt }) => {
   if (!contact) return null;
   return (
@@ -135,19 +134,8 @@ const ContactCard = ({ contact, firmType, firmType_pt }) => {
   );
 };
 
-// --- Componente Principal ---
-
-const ObraDetalhes = ({ obra, className }) => {
-  if (!obra) {
-    return (
-      <div className={`bg-white p-6 rounded-lg shadow-md ${className || ''} text-center`}>
-        <p className="text-xl font-bold text-gray-900">Carregando detalhes da obra...</p>
-      </div>
-    );
-  }
-  
-  const projeto = obra; 
-
+// --- Template para obras do IIR ---
+const IIRTemplate = ({ projeto }) => {
   // Cálculo do Faturamento Estimado Mensal
   let faturamentoEstimadoMensal = '-';
   if (projeto.localTiv && projeto.constructionDuration && projeto.constructionDuration > 0) {
@@ -158,7 +146,7 @@ const ObraDetalhes = ({ obra, className }) => {
   }
 
   return (
-    <div className={`${className || ''}`}>
+    <>
       <Section title="Informações Gerais do Projeto">
         <InfoRow label="Nome do Projeto" value={projeto.projectName_pt || projeto.projectName} />
         <InfoRow label="ID Industrial" value={projeto.projectId} />
@@ -243,7 +231,258 @@ const ObraDetalhes = ({ obra, className }) => {
             <p className="text-sm text-gray-500">Nenhuma informação adicional relevante para construção civil disponível.</p>
          )}
       </Section>
+    </>
+  );
+};
 
+// --- Template para obras do ObrasOnline ---
+const ObrasOnlineTemplate = ({ projeto }) => {
+  // Formatar valor do investimento
+  const formatInvestment = () => {
+    if (!projeto.valor_do_investimento) return '-';
+    const valor = parseFloat(projeto.valor_do_investimento);
+    const grandeza = projeto.grandeza_do_investimento;
+    
+    if (grandeza === 'MI') {
+      return formatCurrency(valor * 1000000, 'BRL');
+    } else if (grandeza === 'BI') {
+      return formatCurrency(valor * 1000000000, 'BRL');
+    } else if (grandeza === 'MIL') {
+      return formatCurrency(valor * 1000, 'BRL');
+    }
+    return formatCurrency(valor, 'BRL');
+  };
+
+  // Formatar endereço completo
+  const formatAddress = () => {
+    const parts = [
+      projeto.endereco && projeto.endereco !== 'Não informado' ? projeto.endereco : null,
+      projeto.numero_endereco && projeto.numero_endereco !== 'S/Nº' && projeto.numero_endereco !== '0' ? projeto.numero_endereco : null,
+      projeto.complemento_endereco,
+      projeto.bairro && projeto.bairro !== 'Não definido' ? projeto.bairro : null,
+      projeto.cidade,
+      projeto.estado,
+      projeto.cep
+    ].filter(Boolean);
+    return parts.join(', ') || '-';
+  };
+
+  // Formatar data brasileira
+  const formatBrazilianDate = (dateString) => {
+    if (!dateString) return '-';
+    try {
+      // Formato esperado: "05-01-2016 11:03" ou "30-10-2021"
+      const [datePart] = dateString.split(' ');
+      const [day, month, year] = datePart.split('-');
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  return (
+    <>
+      <Section title="Informações Básicas da Obra">
+        <InfoRow label="Nome da Obra" value={projeto.nome} />
+        <InfoRow label="Código" value={projeto.codigo} />
+        <InfoRow label="Tipo de Obra" value={projeto.tipo_de_obra} />
+        <InfoRow label="Subsetor" value={projeto.subsetor} />
+        <InfoRow label="Categoria de Uso" value={projeto.categoria_de_uso} />
+        <InfoRow label="Status" value={projeto.status} />
+        <InfoRow label="Fase" value={projeto.fase} />
+        <InfoRow label="Etapa" value={projeto.etapa || 'Etapa não informada'} />
+      </Section>
+
+      <Section title="Especificações Técnicas">
+        <InfoRow label="Especificação" value={projeto.especificacao} />
+        <InfoRow label="Padrão de Acabamento" value={projeto.padrao_de_acabamento || 'Padrão não informado'} />
+        <InfoRow label="Tipo de Investimento" value={projeto.tipo_de_investimento} />
+        <InfoRow label="SPE" value={
+          !projeto.spe || projeto.spe === "00.000.000/0000-00" || projeto.spe === "" 
+            ? "SPE não informado" 
+            : projeto.spe
+        } />
+        <InfoRow label="Área (m²)" value={
+          !projeto.area || projeto.area === 0 || projeto.area === "" 
+            ? "Área não informada" 
+            : projeto.area
+        } />
+      </Section>
+
+      <Section title="Informações Financeiras">
+        <InfoRow label="Valor do Investimento" value={formatInvestment()} />
+        <InfoRow label="Grandeza" value={projeto.grandeza_do_investimento} />
+      </Section>
+
+      <Section title="Localização">
+        <InfoRow label="Endereço Completo" value={formatAddress()} />
+        <InfoRow label="Cidade" value={projeto.cidade} />
+        <InfoRow label="Estado" value={projeto.estado} />
+        <InfoRow label="Região" value={projeto.regiao} />
+        <InfoRow label="Bairro" value={projeto.bairro !== 'Não definido' && projeto.bairro ? projeto.bairro : 'Bairro não informado'} />
+        <InfoRow label="CEP" value={projeto.cep || 'CEP não informado'} />
+        <InfoRow label="Telefone do Canteiro" value={projeto.telefone_canteiro || 'Telefone não informado'} />
+      </Section>
+
+      <Section title="Cronograma e Datas">
+        <InfoRow label="Data de Cadastro" value={formatDate(projeto.data_cadastro)} />
+        <InfoRow label="Data de Habilitação" value={formatDate(projeto.data_habilitacao)} />
+        <InfoRow label="Data de Atualização" value={formatDate(projeto.data_atualizacao)} />
+        <InfoRow label="Previsão Início Fase/Etapa" value={formatDate(projeto.previsao_inicio_fase_etapa)} />
+        <InfoRow label="Previsão Término Fase/Etapa" value={formatDate(projeto.previsao_termino_fase_etapa)} />
+        <InfoRow label="Previsão de Entrega" value={
+          projeto.previsao_entrega ? formatDate(projeto.previsao_entrega) : 'Previsão de entrega não informada'
+        } />
+        <InfoRow label="Status de Atualização" value={projeto.status_atualizacao} />
+        <InfoRow label="Status de Cadastro" value={projeto.status_cadastro} />
+        {projeto.data_desabilitacao && <InfoRow label="Data de Desabilitação" value={formatDate(projeto.data_desabilitacao)} />}
+      </Section>
+
+      {/* Dados quantitativos (sempre exibidos) */}
+      <Section title="Dados Quantitativos">
+        <InfoRow label="Número de Torres" value={
+          projeto.numero_torres && projeto.numero_torres !== 0 ? projeto.numero_torres : "Não informado"
+        } />
+        <InfoRow label="Número de Pisos" value={
+          projeto.numero_pisos && projeto.numero_pisos !== 0 ? projeto.numero_pisos : "Não informado"
+        } />
+        <InfoRow label="Número de Salas" value={
+          projeto.numero_salas && projeto.numero_salas !== 0 ? projeto.numero_salas : "Não informado"
+        } />
+        <InfoRow label="Número de Apartamentos" value={
+          projeto.numero_apartamentos && projeto.numero_apartamentos !== 0 ? projeto.numero_apartamentos : "Não informado"
+        } />
+        <InfoRow label="Número de Casas" value={
+          projeto.numero_casas && projeto.numero_casas !== 0 ? projeto.numero_casas : "Não informado"
+        } />
+        <InfoRow label="Número de Lojas" value={
+          projeto.numero_lojas && projeto.numero_lojas !== 0 ? projeto.numero_lojas : "Não informado"
+        } />
+        <InfoRow label="Número de Unidades" value={
+          projeto.numero_unidades && projeto.numero_unidades !== 0 ? projeto.numero_unidades : "Não informado"
+        } />
+        <InfoRow label="Número de Banheiros" value={
+          projeto.numero_banheiros && projeto.numero_banheiros !== 0 ? projeto.numero_banheiros : "Não informado"
+        } />
+      </Section>
+
+            {/* Empresas envolvidas */}
+      {projeto.empresas && projeto.empresas.length > 0 && (
+        <Section title="Empresas Envolvidas">
+          {projeto.empresas.map((empresa, index) => (
+            <Disclosure key={empresa.Codigo || index} title={`${empresa.Razao_Social} ${empresa.Nome_Fantasia ? `(${empresa.Nome_Fantasia})` : ''}`}>
+              <InfoRow label="Código da Empresa" value={empresa.Codigo} />
+              <InfoRow label="CNPJ" value={empresa.CNPJ || 'CNPJ não informado'} />
+              <InfoRow label="Email" value={empresa.Email || 'Email não informado'} />
+              <InfoRow label="Telefone" value={empresa.Telefone || 'Telefone não informado'} />
+              <InfoRow label="Website" value={
+                empresa.Website ? <a href={empresa.Website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{empresa.Website}</a> : 'Website não informado'
+              } />
+              <InfoRow label="Responsável pela Execução" value={empresa.Reponsavel_Pela_Execucao ? 'Sim' : 'Não'} />
+              <InfoRow label="Empreendedor" value={empresa.Empreendedor ? 'Sim' : 'Não'} />
+              
+              <InfoRow label="Tipos" value={
+                empresa.Tipos && empresa.Tipos.length > 0 ? empresa.Tipos.join(', ') : 'Tipos não informados'
+              } />
+              
+              {/* Endereço da empresa */}
+              <InfoRow label="Endereço da Empresa" value={
+                [
+                  empresa.Endereco,
+                  empresa.Numero_Endereco,
+                  empresa.Complemento_Endereco,
+                  empresa.Bairro,
+                  empresa.Cidade,
+                  empresa.Estado,
+                  empresa.CEP
+                ].filter(Boolean).join(', ')
+              } />
+
+                            {/* Contatos da empresa */}
+              {empresa.Contatos && empresa.Contatos.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-gray-600 mb-2">Contatos:</p>
+                  {empresa.Contatos.map((contato, contatoIndex) => (
+                    <div key={contato.Codigo || contatoIndex} className="ml-4 p-3 border border-gray-200 rounded-md bg-gray-50 mb-2">
+                      <p className="text-sm font-semibold text-black">{contato.Nome} {contato.Codigo && <span className="text-xs text-gray-500">(ID: {contato.Codigo})</span>}</p>
+                      <p className="text-xs text-black">Cargo: {
+                        contato.Cargos && contato.Cargos.length > 0 ? contato.Cargos.join(', ') : 'Cargo não informado'
+                      }</p>
+                      <p className="text-xs text-black">Email: {
+                        contato.Email ? <a href={`mailto:${contato.Email}`} className="text-blue-600 hover:underline">{contato.Email}</a> : 'Email não informado'
+                      }</p>
+                      <p className="text-xs text-black">Telefone: {contato.Telefone || 'Telefone não informado'}</p>
+                      <p className="text-xs text-black">Telefone 2: {contato.Telefone2 || 'Telefone 2 não informado'}</p>
+                      <p className="text-xs text-black">Celular: {contato.Celular || 'Celular não informado'}</p>
+                      <p className="text-xs text-black">DDR: {contato.DDR || 'DDR não informado'}</p>
+                      <p className="text-xs text-black">Ramal: {contato.RamalTelefone && contato.RamalTelefone.trim() !== '    ' ? contato.RamalTelefone : 'Ramal não informado'}</p>
+                      {/* Endereço do contato se diferente da empresa */}
+                      {(contato.Endereco || contato.CEP) && (
+                        <p className="text-xs text-black">Endereço do Contato: {[
+                          contato.Endereco,
+                          contato.Numero_Endereco,
+                          contato.Complemento_Endereco,
+                          contato.Bairro,
+                          contato.Cidade,
+                          contato.Estado,
+                          contato.CEP
+                        ].filter(Boolean).join(', ')}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Disclosure>
+          ))}
+        </Section>
+      )}
+
+      {/* Informações Adicionais */}
+      {(projeto.site || projeto.avaliado !== undefined) && (
+        <Section title="Informações Adicionais">
+          {projeto.site && <InfoRow label="Site de Referência" value={
+            <a href={projeto.site} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{projeto.site}</a>
+          } />}
+          <InfoRow label="Status de Avaliação" value={projeto.avaliado ? 'Já avaliado' : 'Não avaliado'} />
+        </Section>
+      )}
+    </>
+  );
+};
+
+// --- Componente Principal ---
+const ObraDetalhes = ({ obra, className }) => {
+  if (!obra) {
+    return (
+      <div className={`bg-white p-6 rounded-lg shadow-md ${className || ''} text-center`}>
+        <p className="text-xl font-bold text-gray-900">Carregando detalhes da obra...</p>
+      </div>
+    );
+  }
+  
+  const projeto = obra;
+  
+  // Determinar se é obra do IIR ou ObrasOnline
+  const isIIR = projeto.plataforma === 'iir' || projeto.projectId || projeto.projectName || projeto.industryCodeDesc;
+  const isObrasOnline = projeto.plataforma === 'obrasonline' || projeto.codigo || projeto.nome;
+
+  return (
+    <div className={`${className || ''}`}>
+      {/* Badge indicando a fonte - apenas para IIR */}
+      {isIIR && (
+        <div className="mb-4">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+            Industrial Info Research
+          </span>
+        </div>
+      )}
+      
+      {/* Renderização condicional baseada na fonte */}
+      {isIIR ? (
+        <IIRTemplate projeto={projeto} />
+      ) : (
+        <ObrasOnlineTemplate projeto={projeto} />
+      )}
     </div>
   );
 };

@@ -57,15 +57,25 @@ export default function Home() {
       try {
         const result = await fetchNextWork(); // A API agora retorna o objeto diretamente
         if (isActive) {
+          console.log('Dados recebidos da API:', result);
           // A verificação agora é feita diretamente no objeto 'result'
-          if (!result || result.obra === undefined || result.count === undefined) {
-            console.warn('Dados da obra incompletos ou não recebidos da API', result);
+          if (!result) {
+            console.warn('Nenhum resultado recebido da API');
             setObra(null);
-            // Se o resultado existir e tiver um 'count', usamos, senão, 0.
-            setObrasRestantes(result && result.count !== undefined ? result.count : 0);
-          } else {
+            setObrasRestantes(0);
+          } else if (result.message) {
+            // Caso não existam mais obras para avaliar
+            console.log('Mensagem da API:', result.message);
+            setObra(null);
+            setObrasRestantes(result.count || 0);
+          } else if (result.obra && result.count !== undefined) {
+            // Caso normal com obra e count
             setObra(result.obra);
             setObrasRestantes(result.count);
+          } else {
+            console.warn('Dados da obra incompletos ou não recebidos da API', result);
+            setObra(result.obra || null);
+            setObrasRestantes(result.count || 0);
           }
         }
       } catch (error) {
