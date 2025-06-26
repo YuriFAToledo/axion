@@ -101,13 +101,6 @@ const AvaliacaoForm = ({ obra, setShowPopup, setObrasRestantes }) => {
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
       {/* Badge indicando o tipo da obra sendo avaliada */}
-      <div className="mb-4">
-        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-          isIIR ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-        }`}>
-          Avaliando: {isIIR ? 'IIR' : 'ObrasOnline'} | ID: {obraCodigo}
-        </span>
-      </div>
       
       <p className="text-sm text-gray-700 mb-3">Avaliação</p>
       <div className="flex gap-2 flex-wrap">
