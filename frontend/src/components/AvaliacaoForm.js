@@ -50,7 +50,7 @@ const AvaliacaoForm = ({ obra, setShowPopup, setObrasRestantes }) => {
 
   // Determinar o tipo da obra e o código correspondente
   const isIIR = obra.plataforma === 'iir' || obra.projectId || obra.projectName || obra.industryCodeDesc;
-  const isObrasOnline = obra.plataforma === 'obrasonline' || obra.codigo || obra.nome;
+  // const isObrasOnline = obra.plataforma === 'obrasonline' || obra.codigo || obra.nome;
   
   // Definir o código da obra baseado no tipo
   const obraCodigo = isIIR ? obra.projectId : obra.codigo;

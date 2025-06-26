@@ -268,17 +268,17 @@ const ObrasOnlineTemplate = ({ projeto }) => {
   };
 
   // Formatar data brasileira
-  const formatBrazilianDate = (dateString) => {
-    if (!dateString) return '-';
-    try {
-      // Formato esperado: "05-01-2016 11:03" ou "30-10-2021"
-      const [datePart] = dateString.split(' ');
-      const [day, month, year] = datePart.split('-');
-      return `${day}/${month}/${year}`;
-    } catch (error) {
-      return dateString;
-    }
-  };
+  // const formatBrazilianDate = (dateString) => {
+  //   if (!dateString) return '-';
+  //   try {
+  //     // Formato esperado: "05-01-2016 11:03" ou "30-10-2021"
+  //     const [datePart] = dateString.split(' ');
+  //     const [day, month, year] = datePart.split('-');
+  //     return `${day}/${month}/${year}`;
+  //   } catch (error) {
+  //     return dateString;
+  //   }
+  // };
 
   return (
     <>
@@ -464,7 +464,7 @@ const ObraDetalhes = ({ obra, className }) => {
   
   // Determinar se é obra do IIR ou ObrasOnline
   const isIIR = projeto.plataforma === 'iir' || projeto.projectId || projeto.projectName || projeto.industryCodeDesc;
-  const isObrasOnline = projeto.plataforma === 'obrasonline' || projeto.codigo || projeto.nome;
+  // const isObrasOnline = projeto.plataforma === 'obrasonline' || projeto.codigo || projeto.nome;
 
   return (
     <div className={`${className || ''}`}>
